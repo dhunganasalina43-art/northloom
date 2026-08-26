@@ -1,25 +1,17 @@
 import { Request, Response } from "express";
-import mongoose from "mongoose";
 import Order from "../models/order.model";
 import Cart from "../models/cart.model";
 import Product from "../models/product.model";
+import User from "../models/user.model";
 import ApiError from "../utils/apiError.utils";
 import { sendResponse } from "../utils/apiResponse.utils";
 import { asyncHandler } from "../utils/asyncHandler.utils";
 import { getPagination, buildMeta } from "../utils/pagination.utils";
+import { sendOrderConfirmationEmail } from "../utils/email.utils";
 import { OrderStatus, Role } from "../types/enum.types";
 
 const SHIPPING_FEE = 5;
 
-/**
- * POST /api/v1/orders
- * Purpose: turn the logged-in user's current cart into an order (checkout).
- * Auth: required.
- * Body: { shipping_address: {...}, payment_method: "cod" | "card" }
- * Validation: cart must not be empty; every item must still have enough stock.
- * Side effects: decrements product stock, clears the cart.
- * Response: 201 with the created order.
- */
 export const createOrder = asyncHandler(async (req: Request, res: Response) => {
   const { shipping_address, payment_method } = req.body;
 
@@ -74,14 +66,16 @@ export const createOrder = asyncHandler(async (req: Request, res: Response) => {
   cart.items = [] as any;
   await cart.save();
 
+  // Fire-and-forget: don't make the customer wait on email delivery,
+  // and never fail the order because of a mail server issue.
+  const user = await User.findById(req.user?._id);
+  if (user?.email) {
+    sendOrderConfirmationEmail(user.email, order);
+  }
+
   sendResponse(res, { message: "Order placed successfully", data: order, statusCode: 201 });
 });
 
-/**
- * GET /api/v1/orders
- * Purpose: list orders. Customers see only their own; admins can see all.
- * Query: page, limit, status? (admin only filter)
- */
 export const getOrders = asyncHandler(async (req: Request, res: Response) => {
   const isAdmin = req.user?.role === Role.ADMIN;
   const filter: Record<string, any> = isAdmin ? {} : { user: req.user?._id };
@@ -105,11 +99,6 @@ export const getOrders = asyncHandler(async (req: Request, res: Response) => {
   });
 });
 
-/**
- * GET /api/v1/orders/:id
- * Purpose: fetch a single order's full detail.
- * Auth: required. A customer can only view their own order; an admin can view any.
- */
 export const getOrderById = asyncHandler(async (req: Request, res: Response) => {
   const order = await Order.findById(req.params.id).populate("user", "full_name email");
   if (!order) throw new ApiError("Order not found", 404);
@@ -122,11 +111,6 @@ export const getOrderById = asyncHandler(async (req: Request, res: Response) => 
   sendResponse(res, { message: "Order fetched", data: order, statusCode: 200 });
 });
 
-/**
- * PATCH /api/v1/orders/:id/status  (admin only)
- * Purpose: move an order forward through its lifecycle.
- * Body: { status: "pending" | "processing" | "shipped" | "delivered" | "cancelled" }
- */
 export const updateOrderStatus = asyncHandler(async (req: Request, res: Response) => {
   const { status } = req.body;
   if (!Object.values(OrderStatus).includes(status)) {
