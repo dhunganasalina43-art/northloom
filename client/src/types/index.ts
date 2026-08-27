@@ -107,3 +107,18 @@ export interface IApiResponse<T> {
     prev_page: number | null;
   };
 }
+
+export interface IWishlist {
+  _id: string;
+  user: string;
+  products: IProduct[];
+}
+
+export interface IReview {
+  _id: string;
+  product: string;
+  user: { _id: string; full_name: string } | string;
+  rating: number;
+  comment: string;
+  createdAt: string;
+}
