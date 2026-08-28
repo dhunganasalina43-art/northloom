@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { getProducts } from "@/services/product.service";
 import { getCategories } from "@/services/category.service";
@@ -8,12 +8,7 @@ import { ICategory, IProduct } from "@/types";
 import ProductGrid from "@/components/product/ProductGrid";
 import ProductFilters from "@/components/product/ProductFilters";
 
-/**
- * Shop / product listing page. Reads filters from the URL (?q=&category=&sort=)
- * so links from the home page and search bar work, and keeps the URL in sync
- * whenever the shopper changes a filter.
- */
-export default function ShopPage() {
+function ShopContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -66,5 +61,13 @@ export default function ShopPage() {
         <ProductGrid products={products} />
       )}
     </div>
+  );
+}
+
+export default function ShopPage() {
+  return (
+    <Suspense fallback={<p className="text-ink-900/60">Loading shop...</p>}>
+      <ShopContent />
+    </Suspense>
   );
 }
