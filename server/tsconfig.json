@@ -9,11 +9,9 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    "moduleResolution": "node"
+    "moduleResolution": "node10",
+    "ignoreDeprecations": "5.0"
   },
-    "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", "dist"],
-  "ts-node": {
-    "files": true
-  }
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
 }
