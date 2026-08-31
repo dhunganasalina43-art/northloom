@@ -1,7 +1,19 @@
-import mailer from "../config/mailer.config";
+import { Resend } from "resend";
 import ENV_CONFIG from "../config/env.config";
 import { IOrder } from "../models/order.model";
 
+const resend = new Resend(ENV_CONFIG.resendApiKey);
+
+/**
+ * Sends an order confirmation email after checkout via Resend's HTTPS API
+ * (works on hosts like Render that block outbound SMTP). Failures here are
+ * logged but never thrown - a broken mail provider should not stop an
+ * order from succeeding.
+ *
+ * Note: on Resend's free tier without a verified custom domain, delivery
+ * only succeeds when `toEmail` matches the Resend account's own signup
+ * email - this is a Resend platform restriction, not an app bug.
+ */
 export const sendOrderConfirmationEmail = async (
   toEmail: string,
   order: IOrder,
@@ -32,12 +44,16 @@ export const sendOrderConfirmationEmail = async (
       </div>
     `;
 
-    await mailer.sendMail({
-      from: `"Northloom" <${ENV_CONFIG.smtp.user}>`,
+    const { error } = await resend.emails.send({
+      from: "Northloom <onboarding@resend.dev>",
       to: toEmail,
       subject: `Your Northloom order #${String(order._id).slice(-8).toUpperCase()} is confirmed`,
       html,
     });
+
+    if (error) {
+      console.error("[email] Resend returned an error:", error);
+    }
   } catch (error) {
     console.error("[email] failed to send order confirmation:", error);
   }

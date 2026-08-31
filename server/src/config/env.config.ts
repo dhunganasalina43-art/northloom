@@ -1,11 +1,5 @@
 import "dotenv/config";
 
-/**
- * Centralised access point for every environment variable the app needs.
- * Nothing else in the codebase should call process.env directly - this
- * keeps configuration in one auditable place and makes missing vars
- * easy to spot at startup.
- */
 const ENV_CONFIG = {
   port: process.env.PORT || "5000",
   nodeEnv: process.env.NODE_ENV || "development",
@@ -24,12 +18,7 @@ const ENV_CONFIG = {
     apiSecret: process.env.CLOUDINARY_API_SECRET as string,
   },
 
-  smtp: {
-    host: process.env.SMTP_HOST || "",
-    port: Number(process.env.SMTP_PORT || 587),
-    user: process.env.SMTP_USER || "",
-    pass: process.env.SMTP_PASS || "",
-  },
+  resendApiKey: process.env.RESEND_API_KEY as string,
 };
 
 export default ENV_CONFIG;
