@@ -4,15 +4,16 @@ import { IOrder } from "../models/order.model";
 
 const resend = new Resend(ENV_CONFIG.resendApiKey);
 
+const statusMessages: Record<string, string> = {
+  pending: "Your order has been received and is pending confirmation.",
+  processing: "Your order is now being prepared.",
+  shipped: "Great news - your order is on its way!",
+  delivered: "Your order has been delivered. We hope you love it!",
+  cancelled: "Your order has been cancelled.",
+};
+
 /**
- * Sends an order confirmation email after checkout via Resend's HTTPS API
- * (works on hosts like Render that block outbound SMTP). Failures here are
- * logged but never thrown - a broken mail provider should not stop an
- * order from succeeding.
- *
- * Note: on Resend's free tier without a verified custom domain, delivery
- * only succeeds when `toEmail` matches the Resend account's own signup
- * email - this is a Resend platform restriction, not an app bug.
+ * Sends an order confirmation email right after checkout.
  */
 export const sendOrderConfirmationEmail = async (
   toEmail: string,
@@ -52,9 +53,50 @@ export const sendOrderConfirmationEmail = async (
     });
 
     if (error) {
-      console.error("[email] Resend returned an error:", error);
+      console.error("[email] Resend returned an error (confirmation):", error);
     }
   } catch (error) {
     console.error("[email] failed to send order confirmation:", error);
+  }
+};
+
+/**
+ * Sends an update email whenever an order's status changes
+ * (pending -> processing -> shipped -> delivered, or cancelled).
+ */
+export const sendOrderStatusUpdateEmail = async (
+  toEmail: string,
+  order: IOrder,
+): Promise<void> => {
+  try {
+    const orderNumber = String(order._id).slice(-8).toUpperCase();
+    const message = statusMessages[order.status] || `Your order status is now: ${order.status}`;
+
+    const html = `
+      <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto;">
+        <h2 style="color:#28394f;">Order #${orderNumber} update</h2>
+        <p style="font-size:16px;">${message}</p>
+        <p style="margin-top:16px;">
+          <strong>Status:</strong>
+          <span style="text-transform:capitalize;">${order.status}</span>
+        </p>
+        <p style="color:#888; font-size:13px; margin-top:24px;">
+          Thanks for shopping with Northloom.
+        </p>
+      </div>
+    `;
+
+    const { error } = await resend.emails.send({
+      from: "Northloom <onboarding@resend.dev>",
+      to: toEmail,
+      subject: `Order #${orderNumber} is now ${order.status}`,
+      html,
+    });
+
+    if (error) {
+      console.error("[email] Resend returned an error (status update):", error);
+    }
+  } catch (error) {
+    console.error("[email] failed to send order status update:", error);
   }
 };

@@ -7,7 +7,7 @@ import ApiError from "../utils/apiError.utils";
 import { sendResponse } from "../utils/apiResponse.utils";
 import { asyncHandler } from "../utils/asyncHandler.utils";
 import { getPagination, buildMeta } from "../utils/pagination.utils";
-import { sendOrderConfirmationEmail } from "../utils/email.utils";
+import { sendOrderConfirmationEmail, sendOrderStatusUpdateEmail } from "../utils/email.utils";
 import { OrderStatus, Role } from "../types/enum.types";
 
 const SHIPPING_FEE = 5;
@@ -66,8 +66,6 @@ export const createOrder = asyncHandler(async (req: Request, res: Response) => {
   cart.items = [] as any;
   await cart.save();
 
-  // Fire-and-forget: don't make the customer wait on email delivery,
-  // and never fail the order because of a mail server issue.
   const user = await User.findById(req.user?._id);
   if (user?.email) {
     sendOrderConfirmationEmail(user.email, order);
@@ -111,6 +109,12 @@ export const getOrderById = asyncHandler(async (req: Request, res: Response) => 
   sendResponse(res, { message: "Order fetched", data: order, statusCode: 200 });
 });
 
+/**
+ * PATCH /api/v1/orders/:id/status  (admin only)
+ * Purpose: move an order forward through its lifecycle, and email the
+ * customer whenever the status changes.
+ * Body: { status: "pending" | "processing" | "shipped" | "delivered" | "cancelled" }
+ */
 export const updateOrderStatus = asyncHandler(async (req: Request, res: Response) => {
   const { status } = req.body;
   if (!Object.values(OrderStatus).includes(status)) {
@@ -123,6 +127,11 @@ export const updateOrderStatus = asyncHandler(async (req: Request, res: Response
     { new: true, runValidators: true },
   );
   if (!order) throw new ApiError("Order not found", 404);
+
+  const user = await User.findById(order.user);
+  if (user?.email) {
+    sendOrderStatusUpdateEmail(user.email, order);
+  }
 
   sendResponse(res, { message: "Order status updated", data: order, statusCode: 200 });
 });
