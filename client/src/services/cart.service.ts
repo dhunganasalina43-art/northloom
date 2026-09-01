@@ -6,8 +6,18 @@ export const getCart = async () => {
   return res.data;
 };
 
-export const addCartItem = async (product_id: string, quantity = 1) => {
-  const res = await api.post<IApiResponse<ICart>>("/cart/items", { product_id, quantity });
+export const addCartItem = async (
+  product_id: string,
+  quantity = 1,
+  size?: string,
+  color?: string,
+) => {
+  const res = await api.post<IApiResponse<ICart>>("/cart/items", {
+    product_id,
+    quantity,
+    size,
+    color,
+  });
   return res.data;
 };
 

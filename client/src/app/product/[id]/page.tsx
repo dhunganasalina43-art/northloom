@@ -11,6 +11,7 @@ import { useWishlist } from "@/context/wishlist.context";
 import Button from "@/components/ui/Button";
 import ReviewForm from "@/components/product/ReviewForm";
 import ReviewList from "@/components/product/ReviewList";
+import toast from "react-hot-toast";
 
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -21,6 +22,8 @@ export default function ProductDetailPage() {
   const [reviews, setReviews] = useState<IReview[]>([]);
   const [activeImage, setActiveImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
+  const [selectedSize, setSelectedSize] = useState<string>("");
+  const [selectedColor, setSelectedColor] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
 
   const loadReviews = () => {
@@ -40,6 +43,18 @@ export default function ProductDetailPage() {
   const category = typeof product.category === "object" ? product.category.name : "";
   const onSale = product.compare_at_price && product.compare_at_price > product.price;
   const saved = isInWishlist(product._id);
+
+  const handleAddToCart = () => {
+    if (product.sizes.length > 0 && !selectedSize) {
+      toast.error("Please select a size");
+      return;
+    }
+    if (product.colors.length > 0 && !selectedColor) {
+      toast.error("Please select a color");
+      return;
+    }
+    addItem(product._id, quantity, selectedSize || undefined, selectedColor || undefined);
+  };
 
   return (
     <div>
@@ -98,6 +113,48 @@ export default function ProductDetailPage() {
 
           <p className="mt-5 leading-relaxed text-ink-900/70">{product.description}</p>
 
+          {product.sizes.length > 0 && (
+            <div className="mt-5">
+              <span className="mb-2 block text-sm font-medium text-ink-900">Size</span>
+              <div className="flex flex-wrap gap-2">
+                {product.sizes.map((size) => (
+                  <button
+                    key={size}
+                    onClick={() => setSelectedSize(size)}
+                    className={`rounded-sm border px-3 py-1.5 text-sm ${
+                      selectedSize === size
+                        ? "border-indigo-600 bg-indigo-600 text-white"
+                        : "border-ink-900/20 text-ink-900 hover:border-ink-900/40"
+                    }`}
+                  >
+                    {size}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {product.colors.length > 0 && (
+            <div className="mt-5">
+              <span className="mb-2 block text-sm font-medium text-ink-900">Color</span>
+              <div className="flex flex-wrap gap-2">
+                {product.colors.map((color) => (
+                  <button
+                    key={color}
+                    onClick={() => setSelectedColor(color)}
+                    className={`rounded-sm border px-3 py-1.5 text-sm ${
+                      selectedColor === color
+                        ? "border-indigo-600 bg-indigo-600 text-white"
+                        : "border-ink-900/20 text-ink-900 hover:border-ink-900/40"
+                    }`}
+                  >
+                    {color}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           <p className="mt-4 text-sm text-ink-900/60">
             {product.stock > 0 ? `${product.stock} in stock` : "Out of stock"}
           </p>
@@ -121,10 +178,7 @@ export default function ProductDetailPage() {
               </button>
             </div>
 
-            <Button
-              disabled={product.stock === 0}
-              onClick={() => addItem(product._id, quantity)}
-            >
+            <Button disabled={product.stock === 0} onClick={handleAddToCart}>
               Add to cart
             </Button>
           </div>

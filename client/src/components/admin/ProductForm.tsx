@@ -11,11 +11,6 @@ import TextArea from "@/components/ui/TextArea";
 import Select from "@/components/ui/Select";
 import Button from "@/components/ui/Button";
 
-/**
- * Shared create/edit product form. When `product` is passed it PUTs to
- * /products/:id, otherwise it POSTs a new product. Images are optional
- * on edit (existing images are kept) but required on create.
- */
 export default function ProductForm({ product }: { product?: IProduct }) {
   const router = useRouter();
   const [categories, setCategories] = useState<ICategory[]>([]);
@@ -29,6 +24,8 @@ export default function ProductForm({ product }: { product?: IProduct }) {
     stock: product?.stock?.toString() || "",
     category: typeof product?.category === "object" ? product.category._id : product?.category || "",
     tags: product?.tags?.join(", ") || "",
+    sizes: product?.sizes?.join(", ") || "",
+    colors: product?.colors?.join(", ") || "",
     is_featured: product?.is_featured || false,
   });
   const [images, setImages] = useState<FileList | null>(null);
@@ -113,6 +110,24 @@ export default function ProductForm({ product }: { product?: IProduct }) {
         value={form.tags}
         onChange={(e) => onChange("tags", e.target.value)}
       />
+
+      <div className="grid grid-cols-2 gap-4">
+        <Input
+          label="Sizes (comma separated, optional)"
+          placeholder="S, M, L, XL"
+          value={form.sizes}
+          onChange={(e) => onChange("sizes", e.target.value)}
+        />
+        <Input
+          label="Colors (comma separated, optional)"
+          placeholder="Red, Blue, Black"
+          value={form.colors}
+          onChange={(e) => onChange("colors", e.target.value)}
+        />
+      </div>
+      <p className="text-xs text-ink-900/50 -mt-2">
+        Leave Sizes/Colors empty if this product doesn't need those options (e.g. bedding, decor).
+      </p>
 
       <label className="flex items-center gap-2 text-sm text-ink-900">
         <input

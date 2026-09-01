@@ -47,6 +47,8 @@ export interface IProduct {
   images: IImage[];
   category: ICategory | string;
   tags: string[];
+  sizes: string[];
+  colors: string[];
   is_featured: boolean;
   rating_avg: number;
   rating_count: number;
@@ -57,6 +59,8 @@ export interface ICartItem {
   _id: string;
   product: IProduct;
   quantity: number;
+  size?: string;
+  color?: string;
 }
 
 export interface ICart {
@@ -71,6 +75,8 @@ export interface IOrderItem {
   price: number;
   quantity: number;
   image?: string;
+  size?: string;
+  color?: string;
 }
 
 export interface IOrder {

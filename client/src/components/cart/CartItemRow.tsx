@@ -17,6 +17,13 @@ export default function CartItemRow({ item }: { item: ICartItem }) {
 
       <div className="flex-1">
         <p className="text-sm font-medium text-ink-900">{product.name}</p>
+        {(item.size || item.color) && (
+          <p className="mt-0.5 text-xs text-ink-900/50">
+            {item.size && `Size: ${item.size}`}
+            {item.size && item.color && " · "}
+            {item.color && `Color: ${item.color}`}
+          </p>
+        )}
         <p className="mt-1 text-sm text-ink-900/60">${product.price.toFixed(2)}</p>
       </div>
 
