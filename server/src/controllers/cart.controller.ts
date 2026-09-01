@@ -5,11 +5,6 @@ import ApiError from "../utils/apiError.utils";
 import { sendResponse } from "../utils/apiResponse.utils";
 import { asyncHandler } from "../utils/asyncHandler.utils";
 
-/**
- * GET /api/v1/cart
- * Purpose: fetch the logged-in user's cart with product details populated.
- * Auth: required. Creates an empty cart on first access.
- */
 export const getCart = asyncHandler(async (req: Request, res: Response) => {
   let cart = await Cart.findOne({ user: req.user?._id }).populate("items.product");
   if (!cart) {
@@ -20,12 +15,12 @@ export const getCart = asyncHandler(async (req: Request, res: Response) => {
 
 /**
  * POST /api/v1/cart/items
- * Purpose: add a product to the cart, or increase quantity if already present.
- * Auth: required. Body: { product_id, quantity? }
- * Validation: product must exist and have enough stock.
+ * Body: { product_id, quantity?, size?, color? }
+ * A cart line is unique per (product, size, color) combination - adding
+ * the same product with a different size/color creates a separate line.
  */
 export const addItem = asyncHandler(async (req: Request, res: Response) => {
-  const { product_id, quantity = 1 } = req.body;
+  const { product_id, quantity = 1, size, color } = req.body;
   if (!product_id) throw new ApiError("product_id is required", 400);
 
   const product = await Product.findById(product_id);
@@ -34,7 +29,12 @@ export const addItem = asyncHandler(async (req: Request, res: Response) => {
   let cart = await Cart.findOne({ user: req.user?._id });
   if (!cart) cart = new Cart({ user: req.user?._id, items: [] });
 
-  const existingItem = cart.items.find((i) => String(i.product) === String(product_id));
+  const existingItem = cart.items.find(
+    (i) =>
+      String(i.product) === String(product_id) &&
+      (i.size || "") === (size || "") &&
+      (i.color || "") === (color || ""),
+  );
   const nextQuantity = (existingItem?.quantity || 0) + Number(quantity);
 
   if (nextQuantity > product.stock) {
@@ -44,7 +44,7 @@ export const addItem = asyncHandler(async (req: Request, res: Response) => {
   if (existingItem) {
     existingItem.quantity = nextQuantity;
   } else {
-    cart.items.push({ product: product_id, quantity: Number(quantity) } as any);
+    cart.items.push({ product: product_id, quantity: Number(quantity), size, color } as any);
   }
 
   await cart.save();
@@ -53,11 +53,6 @@ export const addItem = asyncHandler(async (req: Request, res: Response) => {
   sendResponse(res, { message: "Item added to cart", data: cart, statusCode: 200 });
 });
 
-/**
- * PATCH /api/v1/cart/items/:itemId
- * Purpose: change the quantity of an existing cart line (increase/decrease).
- * Auth: required. Body: { quantity }
- */
 export const updateItemQuantity = asyncHandler(async (req: Request, res: Response) => {
   const { quantity } = req.body;
   if (!quantity || quantity < 1) throw new ApiError("quantity must be at least 1", 400);
@@ -80,11 +75,6 @@ export const updateItemQuantity = asyncHandler(async (req: Request, res: Respons
   sendResponse(res, { message: "Cart item updated", data: cart, statusCode: 200 });
 });
 
-/**
- * DELETE /api/v1/cart/items/:itemId
- * Purpose: remove a single line item from the cart.
- * Auth: required.
- */
 export const removeItem = asyncHandler(async (req: Request, res: Response) => {
   const cart = await Cart.findOne({ user: req.user?._id });
   if (!cart) throw new ApiError("Cart not found", 404);
@@ -96,11 +86,6 @@ export const removeItem = asyncHandler(async (req: Request, res: Response) => {
   sendResponse(res, { message: "Item removed from cart", data: cart, statusCode: 200 });
 });
 
-/**
- * DELETE /api/v1/cart
- * Purpose: empty the entire cart (used after an order is placed).
- * Auth: required.
- */
 export const clearCart = asyncHandler(async (req: Request, res: Response) => {
   const cart = await Cart.findOneAndUpdate(
     { user: req.user?._id },

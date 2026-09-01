@@ -10,6 +10,8 @@ export interface IProduct extends Document {
   images: { url: string; public_id: string }[];
   category: mongoose.Types.ObjectId;
   tags: string[];
+  sizes: string[];
+  colors: string[];
   is_featured: boolean;
   rating_avg: number;
   rating_count: number;
@@ -58,6 +60,8 @@ const productSchema = new Schema<IProduct>(
       required: [true, "category is required"],
     },
     tags: [{ type: String, trim: true, lowercase: true }],
+    sizes: [{ type: String, trim: true }],
+    colors: [{ type: String, trim: true }],
     is_featured: { type: Boolean, default: false },
     rating_avg: { type: Number, default: 0 },
     rating_count: { type: Number, default: 0 },

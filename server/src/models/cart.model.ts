@@ -4,6 +4,8 @@ export interface ICartItem {
   _id: mongoose.Types.ObjectId;
   product: mongoose.Types.ObjectId;
   quantity: number;
+  size?: string;
+  color?: string;
 }
 
 export interface ICart extends Document {
@@ -15,6 +17,8 @@ const cartItemSchema = new Schema<ICartItem>(
   {
     product: { type: Schema.Types.ObjectId, ref: "Product", required: true },
     quantity: { type: Number, default: 1, min: [1, "quantity must be at least 1"] },
+    size: { type: String, trim: true },
+    color: { type: String, trim: true },
   },
   { _id: true },
 );

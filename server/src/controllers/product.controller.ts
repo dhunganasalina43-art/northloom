@@ -7,14 +7,14 @@ import { uploadToCloudinary, deleteFromCloudinary } from "../utils/cloudinary.ut
 import { generateUniqueSlug } from "../utils/slugify.utils";
 import { getPagination, buildMeta } from "../utils/pagination.utils";
 
-/**
- * GET /api/v1/products
- * Purpose: main storefront listing endpoint - supports search, category
- * filter, price range, sort, and pagination all at once.
- * Query: q?, category?, minPrice?, maxPrice?, sort? (price_asc|price_desc|newest|rating),
- *        page?, limit?
- * Public. Response: 200 with { products } + pagination meta.
- */
+const parseCommaList = (value: any): string[] => {
+  if (!value) return [];
+  return String(value)
+    .split(",")
+    .map((v) => v.trim())
+    .filter(Boolean);
+};
+
 export const getAllProducts = asyncHandler(async (req: Request, res: Response) => {
   const { q, category, minPrice, maxPrice, sort } = req.query;
 
@@ -53,28 +53,19 @@ export const getAllProducts = asyncHandler(async (req: Request, res: Response) =
   });
 });
 
-/** GET /api/v1/products/featured - products flagged is_featured, for the homepage. */
 export const getFeaturedProducts = asyncHandler(async (_req: Request, res: Response) => {
   const products = await Product.find({ is_featured: true }).limit(8).populate("category", "name slug");
   sendResponse(res, { message: "Featured products fetched", data: products, statusCode: 200 });
 });
 
-/** GET /api/v1/products/:id - single product detail page. */
 export const getProductById = asyncHandler(async (req: Request, res: Response) => {
   const product = await Product.findById(req.params.id).populate("category", "name slug");
   if (!product) throw new ApiError("Product not found", 404);
   sendResponse(res, { message: "Product fetched", data: product, statusCode: 200 });
 });
 
-/**
- * POST /api/v1/products  (admin only)
- * Purpose: create a product with up to 6 images.
- * Body: multipart/form-data { name, description, price, stock, category, tags?, is_featured?, images[] }
- * Validation: name/description/price/stock/category required (see model);
- *             description must be >= 20 chars.
- */
 export const createProduct = asyncHandler(async (req: Request, res: Response) => {
-  const { name, description, price, stock, category, tags, is_featured, compare_at_price } = req.body;
+  const { name, description, price, stock, category, tags, sizes, colors, is_featured, compare_at_price } = req.body;
 
   if (!name) throw new ApiError("name is required", 400);
   if (!category) throw new ApiError("category is required", 400);
@@ -97,22 +88,20 @@ export const createProduct = asyncHandler(async (req: Request, res: Response) =>
     stock,
     category,
     images,
-    tags: tags ? String(tags).split(",").map((t) => t.trim()) : [],
+    tags: parseCommaList(tags),
+    sizes: parseCommaList(sizes),
+    colors: parseCommaList(colors),
     is_featured: is_featured === "true" || is_featured === true,
   });
 
   sendResponse(res, { message: "Product created", data: product, statusCode: 201 });
 });
 
-/**
- * PUT /api/v1/products/:id  (admin only)
- * Purpose: update product fields and optionally append new images.
- */
 export const updateProduct = asyncHandler(async (req: Request, res: Response) => {
   const product = await Product.findById(req.params.id);
   if (!product) throw new ApiError("Product not found", 404);
 
-  const { name, description, price, stock, category, tags, is_featured, compare_at_price } = req.body;
+  const { name, description, price, stock, category, tags, sizes, colors, is_featured, compare_at_price } = req.body;
 
   if (name && name !== product.name) {
     product.name = name;
@@ -123,7 +112,9 @@ export const updateProduct = asyncHandler(async (req: Request, res: Response) =>
   if (compare_at_price !== undefined) product.compare_at_price = compare_at_price;
   if (stock !== undefined) product.stock = stock;
   if (category !== undefined) product.category = category;
-  if (tags !== undefined) product.tags = String(tags).split(",").map((t) => t.trim());
+  if (tags !== undefined) product.tags = parseCommaList(tags);
+  if (sizes !== undefined) product.sizes = parseCommaList(sizes);
+  if (colors !== undefined) product.colors = parseCommaList(colors);
   if (is_featured !== undefined) product.is_featured = is_featured === "true" || is_featured === true;
 
   const files = (req.files as Express.Multer.File[]) || [];
@@ -139,10 +130,6 @@ export const updateProduct = asyncHandler(async (req: Request, res: Response) =>
   sendResponse(res, { message: "Product updated", data: product, statusCode: 200 });
 });
 
-/**
- * DELETE /api/v1/products/:id  (admin only)
- * Purpose: remove a product and its Cloudinary images.
- */
 export const deleteProduct = asyncHandler(async (req: Request, res: Response) => {
   const product = await Product.findById(req.params.id);
   if (!product) throw new ApiError("Product not found", 404);

@@ -39,6 +39,8 @@ export const createOrder = asyncHandler(async (req: Request, res: Response) => {
       price: product.price,
       quantity: item.quantity,
       image: product.images?.[0]?.url,
+      size: item.size,
+      color: item.color,
     });
     subtotal += product.price * item.quantity;
   }
