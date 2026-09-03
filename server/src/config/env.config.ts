@@ -18,8 +18,6 @@ const ENV_CONFIG = {
     apiSecret: process.env.CLOUDINARY_API_SECRET as string,
   },
 
-  resendApiKey: process.env.RESEND_API_KEY as string,
-
   smtp: {
     host: process.env.SMTP_HOST || "",
     port: Number(process.env.SMTP_PORT || 587),

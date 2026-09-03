@@ -1,9 +1,6 @@
-import { Resend } from "resend";
 import mailer from "../config/mailer.config";
 import ENV_CONFIG from "../config/env.config";
 import { IOrder } from "../models/order.model";
-
-const resend = new Resend(ENV_CONFIG.resendApiKey);
 
 const statusMessages: Record<string, string> = {
   pending: "Your order has been received and is pending confirmation.",
@@ -13,31 +10,15 @@ const statusMessages: Record<string, string> = {
   cancelled: "Your order has been cancelled.",
 };
 
-/**
- * Sends an email via SMTP in local development (works fine there) or via
- * Resend's HTTPS API in production (needed because Render blocks outbound
- * SMTP ports on its free tier). Failures are logged, never thrown.
- */
+
 const sendEmail = async (to: string, subject: string, html: string, logLabel: string) => {
   try {
-    if (ENV_CONFIG.nodeEnv === "production") {
-      const { error } = await resend.emails.send({
-        from: "Northloom <onboarding@resend.dev>",
-        to,
-        subject,
-        html,
-      });
-      if (error) {
-        console.error(`[email] Resend returned an error (${logLabel}):`, error);
-      }
-    } else {
-      await mailer.sendMail({
-        from: `"Northloom" <${ENV_CONFIG.smtp.user}>`,
-        to,
-        subject,
-        html,
-      });
-    }
+    await mailer.sendMail({
+      from: `"Northloom" <${ENV_CONFIG.smtp.user}>`,
+      to,
+      subject,
+      html,
+    });
   } catch (error) {
     console.error(`[email] failed to send ${logLabel}:`, error);
   }
