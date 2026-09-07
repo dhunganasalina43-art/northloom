@@ -13,7 +13,7 @@ import Select from "@/components/ui/Select";
 import Button from "@/components/ui/Button";
 import { formatPrice } from "@/lib/currency";
 
-const SHIPPING_FEE = 5;
+const SHIPPING_FEE = 150;
 
 function CheckoutPage() {
   const router = useRouter();
