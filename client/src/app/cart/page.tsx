@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCart } from "@/context/cart.context";
 import CartItemRow from "@/components/cart/CartItemRow";
 import Button from "@/components/ui/Button";
+import { formatPrice } from "@/lib/currency";
 
 export default function CartPage() {
   const { cart, isLoading } = useCart();
@@ -40,7 +41,7 @@ export default function CartPage() {
           <h2 className="font-serif text-lg text-ink-900">Order summary</h2>
           <div className="mt-4 flex justify-between text-sm text-ink-900/70">
             <span>Subtotal</span>
-            <span>${subtotal.toFixed(2)}</span>
+            <span>{formatPrice(subtotal)}</span>
           </div>
           <p className="mt-1 text-xs text-ink-900/50">Shipping is calculated at checkout.</p>
           <Link href="/checkout" className="mt-6 block">

@@ -7,6 +7,7 @@ import withAuth from "@/hoc/withAuth";
 import { getProducts, deleteProduct } from "@/services/product.service";
 import { IProduct } from "@/types";
 import Button from "@/components/ui/Button";
+import { formatPrice } from "@/lib/currency";
 
 function AdminProductsPage() {
   const [products, setProducts] = useState<IProduct[]>([]);
@@ -58,7 +59,7 @@ function AdminProductsPage() {
               {products.map((p) => (
                 <tr key={p._id}>
                   <td className="px-4 py-3 text-ink-900">{p.name}</td>
-                  <td className="px-4 py-3">${p.price.toFixed(2)}</td>
+                  <td className="px-4 py-3">{formatPrice(p.price)}</td>
                   <td className="px-4 py-3">{p.stock}</td>
                   <td className="px-4 py-3">{p.is_featured ? "Yes" : "No"}</td>
                   <td className="space-x-3 px-4 py-3 text-right">

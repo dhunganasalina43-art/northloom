@@ -8,6 +8,7 @@ import { getProductById } from "@/services/product.service";
 import { getProductReviews } from "@/services/review.service";
 import { useCart } from "@/context/cart.context";
 import { useWishlist } from "@/context/wishlist.context";
+import { formatPrice } from "@/lib/currency";
 import Button from "@/components/ui/Button";
 import ReviewForm from "@/components/product/ReviewForm";
 import ReviewList from "@/components/product/ReviewList";
@@ -105,9 +106,9 @@ export default function ProductDetailPage() {
           )}
 
           <div className="mt-3 flex items-center gap-3">
-            <span className="text-xl font-semibold text-ink-900">${product.price.toFixed(2)}</span>
+            <span className="text-xl font-semibold text-ink-900">{formatPrice(product.price)}</span>
             {onSale && (
-              <span className="text-ink-900/40 line-through">${product.compare_at_price!.toFixed(2)}</span>
+              <span className="text-ink-900/40 line-through">{formatPrice(product.compare_at_price!)}</span>
             )}
           </div>
 

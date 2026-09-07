@@ -11,6 +11,7 @@ import withAuth from "@/hoc/withAuth";
 import Input from "@/components/ui/Input";
 import Select from "@/components/ui/Select";
 import Button from "@/components/ui/Button";
+import { formatPrice } from "@/lib/currency";
 
 const SHIPPING_FEE = 5;
 
@@ -86,22 +87,22 @@ function CheckoutPage() {
             {cart.items.map((item) => (
               <li key={item._id} className="flex justify-between">
                 <span>{item.product.name} × {item.quantity}</span>
-                <span>${(item.product.price * item.quantity).toFixed(2)}</span>
+                <span>{formatPrice(item.product.price * item.quantity)}</span>
               </li>
             ))}
           </ul>
           <div className="mt-4 space-y-1 border-t border-ink-900/10 pt-4 text-sm">
             <div className="flex justify-between text-ink-900/70">
               <span>Subtotal</span>
-              <span>${subtotal.toFixed(2)}</span>
+              <span>{formatPrice(subtotal)}</span>
             </div>
             <div className="flex justify-between text-ink-900/70">
               <span>Shipping</span>
-              <span>${SHIPPING_FEE.toFixed(2)}</span>
+              <span>{formatPrice(SHIPPING_FEE)}</span>
             </div>
             <div className="flex justify-between font-semibold text-ink-900">
               <span>Total</span>
-              <span>${total.toFixed(2)}</span>
+              <span>{formatPrice(total)}</span>
             </div>
           </div>
         </div>

@@ -5,6 +5,7 @@ import toast from "react-hot-toast";
 import withAuth from "@/hoc/withAuth";
 import { getOrders, updateOrderStatus } from "@/services/order.service";
 import { IOrder, OrderStatus } from "@/types";
+import { formatPrice } from "@/lib/currency";
 
 const statuses: OrderStatus[] = ["pending", "processing", "shipped", "delivered", "cancelled"];
 
@@ -52,7 +53,7 @@ function AdminOrdersPage() {
                 <tr key={order._id}>
                   <td className="px-4 py-3 text-ink-900">#{order._id.slice(-8).toUpperCase()}</td>
                   <td className="px-4 py-3">{typeof order.user === "object" ? order.user.full_name : ""}</td>
-                  <td className="px-4 py-3">${order.total.toFixed(2)}</td>
+                  <td className="px-4 py-3">{formatPrice(order.total)}</td>
                   <td className="px-4 py-3">
                     <select
                       value={order.status}

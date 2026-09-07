@@ -1,8 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { IProduct } from "@/types";
+import { formatPrice } from "@/lib/currency";
 
-/** Storefront grid tile: image, name, price, and a link to the detail page. */
 export default function ProductCard({ product }: { product: IProduct }) {
   const image = product.images?.[0]?.url;
   const onSale = product.compare_at_price && product.compare_at_price > product.price;
@@ -29,9 +29,9 @@ export default function ProductCard({ product }: { product: IProduct }) {
       <div className="mt-3">
         <h3 className="text-sm font-medium text-ink-900">{product.name}</h3>
         <div className="mt-1 flex items-center gap-2 text-sm">
-          <span className="font-semibold text-ink-900">${product.price.toFixed(2)}</span>
+          <span className="font-semibold text-ink-900">{formatPrice(product.price)}</span>
           {onSale && (
-            <span className="text-ink-900/40 line-through">${product.compare_at_price!.toFixed(2)}</span>
+            <span className="text-ink-900/40 line-through">{formatPrice(product.compare_at_price!)}</span>
           )}
         </div>
       </div>

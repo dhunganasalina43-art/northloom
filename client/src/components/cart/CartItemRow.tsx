@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { ICartItem } from "@/types";
 import { useCart } from "@/context/cart.context";
+import { formatPrice } from "@/lib/currency";
 
 export default function CartItemRow({ item }: { item: ICartItem }) {
   const { updateItem, removeItem } = useCart();
@@ -24,7 +25,7 @@ export default function CartItemRow({ item }: { item: ICartItem }) {
             {item.color && `Color: ${item.color}`}
           </p>
         )}
-        <p className="mt-1 text-sm text-ink-900/60">${product.price.toFixed(2)}</p>
+        <p className="mt-1 text-sm text-ink-900/60">{formatPrice(product.price)}</p>
       </div>
 
       <div className="flex items-center gap-2">
@@ -46,7 +47,7 @@ export default function CartItemRow({ item }: { item: ICartItem }) {
       </div>
 
       <p className="w-20 text-right text-sm font-medium text-ink-900">
-        ${(product.price * item.quantity).toFixed(2)}
+        {formatPrice(product.price * item.quantity)}
       </p>
 
       <button

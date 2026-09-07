@@ -5,6 +5,7 @@ import Link from "next/link";
 import { getOrders } from "@/services/order.service";
 import { IOrder } from "@/types";
 import withAuth from "@/hoc/withAuth";
+import { formatPrice } from "@/lib/currency";
 
 const statusColor: Record<string, string> = {
   pending: "bg-linen-200 text-ink-900",
@@ -44,7 +45,7 @@ function OrdersPage() {
                 <p className="text-xs text-ink-900/50">{new Date(order.createdAt).toLocaleDateString()}</p>
               </div>
               <div className="flex items-center gap-4">
-                <span className="text-sm font-medium text-ink-900">${order.total.toFixed(2)}</span>
+                <span className="text-sm font-medium text-ink-900">{formatPrice(order.total)}</span>
                 <span className={`rounded-full px-2.5 py-1 text-xs font-medium capitalize ${statusColor[order.status]}`}>
                   {order.status}
                 </span>
